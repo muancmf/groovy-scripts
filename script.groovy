@@ -24,19 +24,15 @@ TransitionOptions transitionOptions = new TransitionOptions(false, true, false, 
 if (isNotNull(currentUser, currentInwardLinks, issueService, issueInputParameters)) {
     for (IssueLink currentInwardLink : currentInwardLinks) {
         Issue issueForTransition = currentInwardLink.getSourceObject()
-        if (issueForTransition.getProjectId().equals(projectId)) {
-            if (issueForTransition.getIssueTypeId().isCase(issueTypeId)) {
-                if (issueForTransition.getStatusId().isCase(statusId)) {
-                    if (isComplitedExcept(issueLinkManager.getOutwardLinks(issueForTransition.getId()), currentIssueId)) {
-                        IssueService.TransitionValidationResult validationResult =
-                                issueService.validateTransition(currentUser, issueForTransition.getId(),
-                                        actionId, issueInputParameters, transitionOptions)
-                        if (validationResult.isValid()) {
-                            IssueService.IssueResult result = issueService.transition(currentUser, validationResult)
-                            if(result.isValid()){
+        if (isSuitableIssue(issueForTransition, projectId, issueTypeId, statusId)) {
+            if (isComplitedExcept(issueLinkManager.getOutwardLinks(issueForTransition.getId()), currentIssueId)) {
+                IssueService.TransitionValidationResult validationResult =
+                        issueService.validateTransition(currentUser, issueForTransition.getId(),
+                                actionId, issueInputParameters, transitionOptions)
+                if (validationResult.isValid()) {
+                    IssueService.IssueResult result = issueService.transition(currentUser, validationResult)
+                    if (result.isValid()) {
 
-                            }
-                        }
                     }
                 }
             }
@@ -44,6 +40,16 @@ if (isNotNull(currentUser, currentInwardLinks, issueService, issueInputParameter
     }
 }
 
+def boolean isSuitableIssue(Issue checkingIssue, Long suitableProjectId, String suitableIssueTypeId, String suitableStatusId) {
+    if (checkingIssue.getProjectId().equals(suitableProjectId)) {
+        if (checkingIssue.getIssueTypeId().isCase(suitableIssueTypeId)) {
+            if (checkingIssue.getStatusId().isCase(suitableStatusId)) {
+                return true
+            }
+        }
+    }
+    return false
+}
 
 def boolean isComplitedExcept(List<IssueLink> currentOutwardLinks, Long issueId) {
     for (IssueLink link : currentOutwardLinks) {
